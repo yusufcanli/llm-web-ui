@@ -2,50 +2,87 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
+import { use, useEffect, useMemo, useState } from "react";
+import useChatStore from "@/store/chatStore";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import PromptDialog from "@/components/PromptDialog";
 
 
 export default function Home() {
+  const chatStore = useChatStore()
 
-const [resizeEditor, setResizeEditor] = useState(false)
-const [chats, setChats] = useState([])
-const [currentChat, setCurrentChat] = useState({
-  id: '',
-  messages: [
-    {
-      role: 'assistant',
-      content: 'lorem iopsum',
-      date: 0
-    }
-  ],
-})
-const [editMessageContent, setEditMessageContent] = useState({
-  index: 0,
-  content: '',
-  date: 0
-})
-const aiResponding = {
-  loading: true,
-  response: ''
+  const [messageInput, setMessageInput] = useState('')
+  const [systemPrompt, setSystemPrompt] = useState('')
+  const chats = useChatStore(state => {
+    return state.aiChats.reverse()
+  })
+
+  const currentChat = useChatStore(state => state.currentChat)
+  const quickPrompts = useChatStore(state => state.quickPrompts)
+  const aiResponding = useChatStore(state => state.aiResponding)
+  const models = useChatStore(state => state.models)
+
+  const [resizeEditor, setResizeEditor] = useState(false)
+  const [editMessageContent, setEditMessageContent] = useState({
+    index: 0,
+    content: '',
+    date: 0
+  })
+
+  const messageClasses = {
+    assistant: 'received bg-[#ffffff17] rounded-md',
+    user: 'sent'
+  }
+
+function setApiRoute(e) {
+  const apiRoute = e.target.children.apiRoute.value
+  const setApiRoute = useChatStore.getState().setApiRoute
+  setApiRoute(apiRoute)
+  location.reload()
 }
-
-const messageClasses = {
-  assistant: 'received bg-[#ffffff17] rounded-md',
-  user: 'sent'
-}
-
 
 function downloadChat() {
-
+  const chat = currentChat
+  //download
 }
 
-function deleteChat(chatId) {
-
+async function addNewChat() {
+  currentChat.id = 0
 }
 
-function sendMessage() {
+async function selectChat(chatId: number) {
+  const setCurrentChat = useChatStore.getState().setCurrentChat
+  await setCurrentChat(chatId)
+}
 
+async function createChat(message: string) {
+  const addNewChat = useChatStore.getState().addNewChat
+  await addNewChat(message, systemPrompt)
+}
+
+async function deleteChat(chatId: number) {
+  const deleteChat = useChatStore.getState().deleteChat
+  await deleteChat(chatId)
+}
+
+async function stopAiResponse() {
+  aiResponding.controller?.abort()
+}
+
+async function sendMessage() {
+  const addUserMessage = useChatStore.getState().addUserMessage
+  if(resizeEditor) {
+    setResizeEditor(false)
+  }
+  const  msg = messageInput
+  setMessageInput('')
+  if(currentChat.id) {
+    const newMessage = {role: "user", content: msg, date: Date.now()}
+    await addUserMessage(newMessage)
+  } else {
+    createChat(msg)
+  }
 }
 
 function doEditMessage() {
@@ -64,14 +101,24 @@ function removeMessage(messageDate: number) {
 
 }
 
-function timeFilter(date: number) {
-  return date
+function timeFilter(mDate: number) {
+  return new Date(mDate).toLocaleString(navigator.language, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function stopAiResponse() {
 
 }
 
+  useEffect(() => {
+    chatStore.getModels()
+  }, [])
 return (
   <SidebarProvider>
     <AppSidebar />
@@ -81,7 +128,7 @@ return (
         { !chats.length && (<h1 v-if="!chats.length" className="my-5">Start A New Conversation</h1>) }
         <div className="text-lg bg-[#111111] py-10 px-5 rounded-lg">
           {
-            currentChat.id && (
+            !!currentChat.id && (
               <div>
                 <span className="text-xxl">currentChat.name</span>
                 <div className="ops flex gap-2 mb-3">
@@ -91,6 +138,7 @@ return (
               </div>
             )
           }
+          <PromptDialog />
         </div>
         <div className="chat w-full my-3 p-3">
           {

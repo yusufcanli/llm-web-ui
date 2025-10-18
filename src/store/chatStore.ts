@@ -65,14 +65,15 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     localStorage.setItem('apiRoute', route)
   },
   async getModels() {
+    set(({apiRoute: 'http://192.168.1.5:1234'}))
     const prompts = (await DB.getItem('aiPrompts') || []) as string[]
     set(({ quickPrompts: prompts }))
-    const response = await fetch(`${this.apiRoute}/v1/models?cache=${Date.now()}`)
+    const response = await fetch(`${get().apiRoute}/v1/models?cache=${Date.now()}`)
     const allModels = await response.json()
     set(({ models: allModels.data }))
     const savedModel = localStorage.getItem('currentModel')
-    const findModel = this.models.find(m => m.id === savedModel)
-    const model = findModel ? savedModel : this.models[0].id
+    const findModel = get().models.find(m => m.id === savedModel)
+    const model = findModel ? savedModel : get().models[0].id
     set(({ currentModel: model }))
   },
   async setModel(modelId: string) {
@@ -121,29 +122,29 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     await DB.setItem((chatId + '_story'), story)
   },
   async removeChat(chatId: number) {
-    const state = useChatStore.getState()
-    if(state.currentChat.id === chatId) {
+    const { currentChat, aiChats } = get()
+    if(currentChat.id === chatId) {
       set({ currentChat: {...currentChatInstance} })
     }
-    const filteredChats = state.aiChats.filter(c => c.id !== chatId)
+    const filteredChats = aiChats.filter(c => c.id !== chatId)
     set({ aiChats: filteredChats })
     await DB.removeItem((chatId + '_chats'))
-    if(!state.aiChats.length) {
+    if(!filteredChats.length) {
       await DB.removeItem('aiChats')
     } else {
       await DB.setItem('aiChats', filteredChats)
     }
   },
   async updateChatName(id: number, name: string) {
-    const state = useChatStore.getState()
-    const chats = [...state.aiChats]
+    const { currentChat, aiChats } = get()
+    const chats = [...aiChats]
     const chat = chats.find(c => c.id === id)
     if(!chat) return
     chat.name = name
     set({ aiChats: chats })
     await DB.setItem('aiChats', [...chats])
-    if(state.currentChat.id === id) {
-      set(({ currentChat: { ...state.currentChat, name } }))
+    if(currentChat.id === id) {
+      set(({ currentChat: { ...currentChat, name } }))
     }
   },
   async uploadChat(chat: string) {
@@ -210,9 +211,8 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set((s) => ({ currentChat: { ...s.currentChat, messages } }))
   },
   async addNewPrompt(prompt: string) {
-    const state = useChatStore.getState()
     set((s) => ({ quickPrompts: [...s.quickPrompts, prompt] }))
-    await DB.setItem('aiPrompts', [...state.quickPrompts])
+    await DB.setItem('aiPrompts', [...get().quickPrompts])
   },
   async removePrompt(index: number) {
     const state = useChatStore.getState()
