@@ -1,103 +1,189 @@
-import Image from "next/image";
+'use client'
+
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/AppSidebar"
+import { Icon } from "@iconify/react";
+import { useState } from "react";
+
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+const [resizeEditor, setResizeEditor] = useState(false)
+const [chats, setChats] = useState([])
+const [currentChat, setCurrentChat] = useState({
+  id: '',
+  messages: [
+    {
+      role: 'assistant',
+      content: 'lorem iopsum',
+      date: 0
+    }
+  ],
+})
+const [editMessageContent, setEditMessageContent] = useState({
+  index: 0,
+  content: '',
+  date: 0
+})
+const aiResponding = {
+  loading: true,
+  response: ''
+}
+
+const messageClasses = {
+  assistant: 'received bg-[#ffffff17] rounded-md',
+  user: 'sent'
+}
+
+
+function downloadChat() {
+
+}
+
+function deleteChat(chatId) {
+
+}
+
+function sendMessage() {
+
+}
+
+function doEditMessage() {
+
+}
+
+function editMessage(message) {
+
+}
+
+function copyMessage(content: string) {
+
+}
+
+function removeMessage(messageDate: number) {
+
+}
+
+function timeFilter(date: number) {
+  return date
+}
+
+function stopAiResponse() {
+
+}
+
+return (
+  <SidebarProvider>
+    <AppSidebar />
+    <main className="w-full">
+      <SidebarTrigger />
+      <div className="container">
+        { !chats.length && (<h1 v-if="!chats.length" className="my-5">Start A New Conversation</h1>) }
+        <div className="text-lg bg-[#111111] py-10 px-5 rounded-lg">
+          {
+            currentChat.id && (
+              <div>
+                <span className="text-xxl">currentChat.name</span>
+                <div className="ops flex gap-2 mb-3">
+                  <button onClick={downloadChat} className="button text-sm py-1">Download</button>
+                  <button onClick={() => deleteChat(currentChat.id)} className="button red text-sm py-1">Remove</button>
+                </div>
+              </div>
+            )
+          }
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div className="chat w-full my-3 p-3">
+          {
+            currentChat.messages.map((message, m_i) => (
+              <div
+                key={m_i}
+                className={`my-3 w-full p-3 ${message.role === 'assistant' ? messageClasses.assistant : messageClasses.user}`}
+              >
+                <div className="flex flex-col sm:flex-row">
+                  {
+                    message.role === 'assistant' ? (
+                      <div v-if="" className="min-h-[30px] min-w-[30px] h-[30px] w-[30px] border rounded-full flex items-center justify-center text-[20px]">
+                        <Icon icon="hugeicons:ai-network" />
+                      </div>
+                    ) : (
+                      <div className="min-h-[30px] min-w-[30px] h-[30px] w-[30px] border rounded-full flex items-center justify-center text-[20px]">
+                        <Icon icon="material-symbols:person" />
+                      </div>
+                    )
+                  }
+                  <div className="w-full mt-3 sm:mt-0 sm:ml-3">
+                    {
+                      editMessageContent.date === message.date && (
+                        <div className="contenteditable w-full mb-3">
+                          <textarea v-model="editMessageContent.content" className="h-[50vh]"></textarea>
+                          <div className="w-full flex justify-end gap-2">
+                            <button onClick={() => setEditMessageContent(prev => ({...prev, date: 0}))} className="button red">Disgard</button>
+                            <button onClick={doEditMessage} className="button green">Save</button>
+                          </div>
+                        </div>
+                      )
+                    }
+                    <div className="whitespace-break-spaces">{ message.content }</div>
+                  </div>
+                </div>
+                <div className="mt-5 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <button className="focus:text-[--green]" onClick={() => editMessage(message)}><Icon icon="mage:edit" /></button>
+                    <button className="focus:text-[--green]" onClick={() => copyMessage(message.content)}><Icon icon="mynaui:copy" /></button>
+                    <button v-if="m_i > 1" className="focus:text-[--red]" onClick={() => removeMessage(message.date)}><Icon icon="material-symbols:delete-outline" /></button>
+                  </div>
+                  <div className="text-xs">{timeFilter(message.date)}</div>
+                </div>
+              </div>
+            ))
+          }
+          {
+            aiResponding.loading && (
+              <div className={`my-3 w-full p-3 ${messageClasses.assistant}`}>
+                <div className="flex flex-col sm:flex-row">
+                  <div className="min-h-[30px] min-w-[30px] h-[30px] w-[30px] border rounded-full flex items-center justify-center text-[20px]">
+                    <Icon icon="hugeicons:ai-network" />
+                  </div>
+                  <div className="w-full">
+                    {
+                      aiResponding.response && (
+                        <div v-if="aiResponding.response" className="whitespace-break-spaces mt-3 sm:mt-0 sm:ml-3">
+                          <span>aiResponding.response<Icon className="inline mb-0.5 ml-[2px] text-[--green]" icon="pepicons-pencil:line-y" /></span>
+                        </div>
+                      )
+                    }
+                    <div className="text-[30px] mr-2 w-full flex justify-end">
+                      <span className="mr-1">
+                        <Icon icon="eos-icons:three-dots-loading" />
+                      </span>
+                      <button onClick={stopAiResponse}>
+                        <Icon icon="mdi:stop-circle-outline" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+        </div>
+        <div className="bg-[#111111]">
+          <div className={`editor px-3 rounded-lg flex items-start gap-2 ${resizeEditor && 'resize'}`}>
+            <div className="w-full textarea-wrapper">
+              <textarea v-model="messageInput" className="bg-transparent border-0 p-[12px] h-[200px]"></textarea>
+            </div>
+            <div className="editor-ops flex flex-col gap-1 py-3">
+              <button onClick={() => setResizeEditor(prev => (!prev))} className="button !bg-white rounded-sm !text-black !p-3"><Icon icon="clarity:resize-line" /></button>
+              <button onClick={() => sendMessage()} className="button green rounded-sm !p-3"><Icon icon="material-symbols:send" /></button>
+            </div>
+          </div>
+          <div className="w-full flex items-center justify-between">
+            <div className="mr-3">
+              messageInputTokens Ts
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </SidebarProvider>
   );
 }
