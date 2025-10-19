@@ -2,11 +2,10 @@ import { create } from "zustand";
 import { ChatType, MessageType, ModelType } from "@/types";
 import DB from "@/lib/db";
 
-export type Role = "user" | "assistant" | "system";
 
 const currentChatInstance: ChatType = {
   name: '',
-  id: 0,
+  id: null,
   model: '',
   messages: [],
   story: ''
@@ -48,7 +47,7 @@ interface ChatState {
 }
 
 export const useChatStore = create<ChatState>()((set, get) => ({
-  apiRoute: localStorage.getItem('apiRoute'),
+  apiRoute: process.env.NEXT_PUBLIC_API_URL || '',
   models: [],
   quickPrompts: [],
   currentModel: '',
@@ -65,27 +64,29 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     localStorage.setItem('apiRoute', route)
   },
   async getModels() {
-    set(({apiRoute: 'http://192.168.1.5:1234'}))
+    console.log(get().apiRoute)
     const prompts = (await DB.getItem('aiPrompts') || []) as string[]
     set(({ quickPrompts: prompts }))
     const response = await fetch(`${get().apiRoute}/v1/models?cache=${Date.now()}`)
     const allModels = await response.json()
+    console.log('allModels', allModels)
     set(({ models: allModels.data }))
-    const savedModel = localStorage.getItem('currentModel')
+    const savedModel = localStorage.getItem('currentModel') || ''
     const findModel = get().models.find(m => m.id === savedModel)
     const model = findModel ? savedModel : get().models[0].id
+    console.log('model', model)
     set(({ currentModel: model }))
   },
   async setModel(modelId: string) {
-    const store = useChatStore.getState()
-    if(!store.currentChat.model) {
+    const currentChatModel = get().currentChat.model
+    if(!currentChatModel) {
       set(({ currentModel: modelId }))
     } else {
-      const findChat = store.aiChats.find(c => c.id === store.currentChat.id)
+      const findChat = get().aiChats.find(c => c.id === get().currentChat.id)
       if(!findChat) return
       const updatedCurrentChat = { ...findChat, model: modelId }
       set(({ currentChat: updatedCurrentChat }))
-      await DB.setItem('aiChats', store.aiChats)
+      await DB.setItem('aiChats', get().aiChats)
     }
     localStorage.setItem('currentModel', modelId)
   },
@@ -94,16 +95,15 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ aiChats })
   },
   async addNewChat(userPrompt: string, systemPrompt: string) {
-    const state = useChatStore.getState()
-    const newChat: ChatType = { name: userPrompt.slice(0, 50), id: Date.now(), model: state.currentModel, story: '' }
+    const newChat: ChatType = { name: userPrompt.slice(0, 50), id: Date.now(), model: get().currentModel, story: '' }
     const systemMessage: MessageType = { role: "system", content: systemPrompt, date: (Date.now() - 10) }
     const userMessage: MessageType = { role: "user", content: userPrompt, date: Date.now() }
     const messages = [systemMessage, userMessage]
     set((s) => ({ aiChats: [ ...s.aiChats, newChat ] }))
     await DB.setItem((newChat.id + '_chats'), messages)
-    await DB.setItem('aiChats', this.aiChats)
+    await DB.setItem('aiChats', get().aiChats)
     set({currentChat: {...newChat, messages}})
-    await this.sendMessage(messages)
+    await get().sendMessage(messages)
   },
   async setCurrentChat(chatId: number) {
     const chat = this.aiChats.find(c => c.id === chatId) as ChatType
@@ -149,6 +149,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   },
   async uploadChat(chat: string) {
     const parsedChat: ChatType = JSON.parse(chat)
+    if(!parsedChat.id) return
     const newChat = { name: parsedChat.name, id: parsedChat.id, model: parsedChat.model }
     set((s) => ({ aiChats: [ ...s.aiChats, newChat ] }))
     await DB.setItem((newChat.id + '_chats'), parsedChat.messages)
@@ -160,8 +161,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   },
 
   async addUserMessage(message: MessageType) {
-    const state = useChatStore.getState()
-    const messages = await get().getAChat(state.currentChat.id)
+    const messages = await get().getAChat(get().currentChat.id as number)
     messages.push(message)
     set((s) => {
       const currentMessages = s.currentChat.messages || []
@@ -169,7 +169,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         currentChat: {...s.currentChat,  messages: [...currentMessages, message]}
       }
     })
-    await DB.setItem((state.currentChat.id + '_chats'), messages)
+    await DB.setItem((get().currentChat.id + '_chats'), messages)
     await get().sendMessage(messages)
   },
   async addAiMessage(message: MessageType) {
@@ -179,35 +179,35 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         currentChat: {...s.currentChat,  messages: [...currentMessages, message]}
       }
     })
-    const state = useChatStore.getState()
-    await DB.setItem((state.currentChat.id + '_chats'), state.currentChat.messages)
+    await DB.setItem((get().currentChat.id + '_chats'), get().currentChat.messages)
   },
   async editMessage(edited: MessageType) {
-    const state = useChatStore.getState()
-    if(!state.currentChat.messages) return;
-    const messages = [...state.currentChat.messages]
+    const currentChatMessages = get().currentChat.messages;
+    if(!currentChatMessages) return;
+    const messages = [...currentChatMessages]
     const message = messages.find(m => m.date === edited.date)
     if(!message) return;
     message.content = edited.content
     set((s) => ({ currentChat: { ...s.currentChat, messages } }))
-    await DB.setItem((this.currentChat.id + '_chats'), messages)
+    await DB.setItem((get().currentChat.id + '_chats'), messages)
   },
   async removeMessage(messageDate: number) {
-    const state = useChatStore.getState()
-    if(!state.currentChat.messages) return;
-    const messages = state.currentChat.messages.filter(m => m.date !== messageDate)
+    const currentChatMessages = get().currentChat.messages;
+    if(!currentChatMessages) return;
+    const messages = currentChatMessages.filter(m => m.date !== messageDate)
     set((s) => ({ currentChat: { ...s.currentChat, messages } }))
-    await DB.setItem((this.currentChat.id + '_chats'), messages)
+    await DB.setItem((get().currentChat.id + '_chats'), messages)
   },
 
   async setSystemPrompt(systemPrompt: string) {
-    const state = useChatStore.getState()
-    if(!state.currentChat.id || !state.currentChat.messages) return;
-    const messages = [...state.currentChat.messages]
+    const currentChatMessages = get().currentChat.messages;
+    const currentChatId = get().currentChat.id;
+    if(!currentChatId || !currentChatMessages) return;
+    const messages = [...currentChatMessages]
     const sys = messages.find(m => m.role === "system")
     if(!sys) return;
     sys.content = systemPrompt
-    await DB.setItem((this.currentChat.id + '_chats'), messages)
+    await DB.setItem((currentChatId + '_chats'), messages)
     set((s) => ({ currentChat: { ...s.currentChat, messages } }))
   },
   async addNewPrompt(prompt: string) {
@@ -215,14 +215,12 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     await DB.setItem('aiPrompts', [...get().quickPrompts])
   },
   async removePrompt(index: number) {
-    const state = useChatStore.getState()
-    const prompts = state.quickPrompts.filter((p,i) => i !== index)
+    const prompts = get().quickPrompts.filter((p,i) => i !== index)
     set(({ quickPrompts: prompts }))
     await DB.setItem('aiPrompts', [...prompts])
   },
 
   async sendMessage(messages: MessageType[]) {
-    const state = useChatStore.getState()
     const filteredMessages = messages.map(m => ({role: m.role, content: m.content}))
     const aiResponding = {
       response: '',
@@ -238,7 +236,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         messages: filteredMessages,
         stream: true,
       }),
-      signal: (state.aiResponding.controller as AbortController).signal
+      signal: (get().aiResponding.controller as AbortController).signal
     })
 
     if(!res?.body) {
@@ -256,7 +254,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       } catch (err) {
         const error = err as Error
         if (error.name === "AbortError") {
-          if (state.aiResponding.response.trim()) {
+          if (get().aiResponding.response.trim()) {
             await get().addAiMessage({ role: "assistant", content: aiResponding.response, date: Date.now() })
           }
           set({ aiResponding: {...aiResponding, loading: false} })

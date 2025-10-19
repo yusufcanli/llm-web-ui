@@ -14,7 +14,7 @@ export type MessageType = {
 
 export type ChatType = {
   name: string;
-  id: number;
+  id: number | null;
   model: string | null;
   messages?: MessageType[] | undefined;
   story?: string | undefined;

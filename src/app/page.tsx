@@ -7,6 +7,7 @@ import useChatStore from "@/store/chatStore";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import PromptDialog from "@/components/PromptDialog";
+import ModelDialog from "@/components/ModelDialog";
 
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
 
   const [messageInput, setMessageInput] = useState('')
   const [systemPrompt, setSystemPrompt] = useState('')
+  const messageInputTokens = useMemo(() => Math.ceil(messageInput.length / 4), [messageInput])
   const chats = useChatStore(state => {
     return state.aiChats.reverse()
   })
@@ -34,13 +36,6 @@ export default function Home() {
     assistant: 'received bg-[#ffffff17] rounded-md',
     user: 'sent'
   }
-
-function setApiRoute(e) {
-  const apiRoute = e.target.children.apiRoute.value
-  const setApiRoute = useChatStore.getState().setApiRoute
-  setApiRoute(apiRoute)
-  location.reload()
-}
 
 function downloadChat() {
   const chat = currentChat
@@ -217,16 +212,17 @@ return (
         <div className="bg-[#111111]">
           <div className={`editor px-3 rounded-lg flex items-start gap-2 ${resizeEditor && 'resize'}`}>
             <div className="w-full textarea-wrapper">
-              <textarea v-model="messageInput" className="bg-transparent border-0 p-[12px] h-[200px]"></textarea>
+              <textarea v-model="messageInput" className="w-full bg-transparent border-0 p-[12px] h-[200px]"></textarea>
             </div>
             <div className="editor-ops flex flex-col gap-1 py-3">
-              <button onClick={() => setResizeEditor(prev => (!prev))} className="button !bg-white rounded-sm !text-black !p-3"><Icon icon="clarity:resize-line" /></button>
-              <button onClick={() => sendMessage()} className="button green rounded-sm !p-3"><Icon icon="material-symbols:send" /></button>
+              <Button size="icon-lg" onClick={() => setResizeEditor(prev => (!prev))}><Icon icon="clarity:resize-line" /></Button>
+              <Button size="icon-lg" onClick={() => sendMessage()}  className="bg-green-500 hover:bg-green-400 text-white"><Icon icon="material-symbols:send" /></Button>
             </div>
           </div>
           <div className="w-full flex items-center justify-between">
-            <div className="mr-3">
-              messageInputTokens Ts
+            <ModelDialog />
+            <div className="mr-3 text-sm">
+              {messageInputTokens} tokens
             </div>
           </div>
         </div>
