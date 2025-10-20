@@ -13,6 +13,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const metadata: Metadata = {
+  title: 'LLM Web UI',
+  description: 'A web-based user interface for interacting with large language models.',
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
