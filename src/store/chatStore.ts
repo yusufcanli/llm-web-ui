@@ -22,13 +22,14 @@ interface ChatState {
     response: string;
     loading: boolean;
     controller: AbortController | null;
-  }
+  },
+  systemPrompt: string;
 
   setApiRoute: (route: string) => void;
   getModels: () => Promise<void>;
   setModel: (modelId: string) => Promise<void>;
   getChats: () => Promise<void>;
-  addNewChat: (userPrompt: string, systemPrompt: string) => Promise<void>;
+  addNewChat: (userPrompt: string) => Promise<void>;
   setCurrentChat: (chatId: number) => Promise<void>;
   getAChat: (chatId: number) => Promise<MessageType[]>;
   getAChatStory: (chatId: number) => Promise<string>;
@@ -44,6 +45,7 @@ interface ChatState {
   addNewPrompt: (prompt: string) => Promise<void>;
   removePrompt: (index: number) => Promise<void>;
   sendMessage: (messages: MessageType[]) => Promise<void>;
+  clearCurrentChat: () => void;
 }
 
 export const useChatStore = create<ChatState>()((set, get) => ({
@@ -58,13 +60,15 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     loading: false,
     controller: null
   },
+  systemPrompt: '',
 
   setApiRoute(route: string) {
     set(({ apiRoute: route }))
     localStorage.setItem('apiRoute', route)
   },
   async getModels() {
-    console.log(get().apiRoute)
+    const chats = (await DB.getItem('aiChats') || []) as ChatType[]
+    set(({ aiChats: chats }))
     const prompts = (await DB.getItem('aiPrompts') || []) as string[]
     set(({ quickPrompts: prompts }))
     const response = await fetch(`${get().apiRoute}/v1/models?cache=${Date.now()}`)
@@ -74,7 +78,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const savedModel = localStorage.getItem('currentModel') || ''
     const findModel = get().models.find(m => m.id === savedModel)
     const model = findModel ? savedModel : get().models[0].id
-    console.log('model', model)
     set(({ currentModel: model }))
   },
   async setModel(modelId: string) {
@@ -94,22 +97,23 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const aiChats = (await DB.getItem('aiChats') || []) as ChatType[]
     set({ aiChats })
   },
-  async addNewChat(userPrompt: string, systemPrompt: string) {
+  async addNewChat(userPrompt: string ) {
+    console.log(userPrompt)
     const newChat: ChatType = { name: userPrompt.slice(0, 50), id: Date.now(), model: get().currentModel, story: '' }
-    const systemMessage: MessageType = { role: "system", content: systemPrompt, date: (Date.now() - 10) }
+    const systemMessage: MessageType = { role: "system", content: get().systemPrompt, date: (Date.now() - 10) }
     const userMessage: MessageType = { role: "user", content: userPrompt, date: Date.now() }
     const messages = [systemMessage, userMessage]
     set((s) => ({ aiChats: [ ...s.aiChats, newChat ] }))
+    set({currentChat: {...newChat, messages}})
     await DB.setItem((newChat.id + '_chats'), messages)
     await DB.setItem('aiChats', get().aiChats)
-    set({currentChat: {...newChat, messages}})
     await get().sendMessage(messages)
   },
   async setCurrentChat(chatId: number) {
-    const chat = this.aiChats.find(c => c.id === chatId) as ChatType
+    const chat = get().aiChats.find(c => c.id === chatId) as ChatType
     if(!chat) return;
-    const messages = await this.getAChat(chatId)
-    const story = await this.getAChatStory(chatId)
+    const messages = await get().getAChat(chatId)
+    const story = await get().getAChatStory(chatId)
     set({ currentChat: {...chat, messages, story}})
   },
   async getAChat(chatId: number) {
@@ -153,7 +157,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     const newChat = { name: parsedChat.name, id: parsedChat.id, model: parsedChat.model }
     set((s) => ({ aiChats: [ ...s.aiChats, newChat ] }))
     await DB.setItem((newChat.id + '_chats'), parsedChat.messages)
-    await DB.setItem('aiChats', this.aiChats)
+    await DB.setItem('aiChats', get().aiChats)
     if(parsedChat.story) {
       await get().setAChatStory(parsedChat.id, parsedChat.story)
     }
@@ -200,6 +204,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   },
 
   async setSystemPrompt(systemPrompt: string) {
+    set({ systemPrompt })
     const currentChatMessages = get().currentChat.messages;
     const currentChatId = get().currentChat.id;
     if(!currentChatId || !currentChatMessages) return;
@@ -219,6 +224,9 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set(({ quickPrompts: prompts }))
     await DB.setItem('aiPrompts', [...prompts])
   },
+  clearCurrentChat() {
+    set({ currentChat: { ...currentChatInstance } })
+  },
 
   async sendMessage(messages: MessageType[]) {
     const filteredMessages = messages.map(m => ({role: m.role, content: m.content}))
@@ -228,11 +236,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       controller: new AbortController()
     }
     set({ aiResponding })
-    const res = await fetch(`${this.apiRoute}/v1/chat/completions?cache=${Date.now()}`, {
+    const res = await fetch(`${get().apiRoute}/v1/chat/completions?cache=${Date.now()}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: this.currentModel,
+        model: get().currentModel,
         messages: filteredMessages,
         stream: true,
       }),
@@ -277,12 +285,13 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       
           // partial content
           if (json.choices?.[0]?.delta?.content) {
-            this.aiResponding.response += json.choices?.[0]?.delta?.content
+            set({ aiResponding: {...aiResponding, response: get().aiResponding.response + json.choices?.[0]?.delta?.content} })
+
           }
       
           // end of stream
           if (json.choices?.[0]?.finish_reason === "stop") {
-            await get().addAiMessage({ role: "assistant", content: this.aiResponding.response, date: Date.now() })
+            await get().addAiMessage({ role: "assistant", content: get().aiResponding.response, date: Date.now() })
             set({ aiResponding: {...aiResponding, loading: false} })
           }
         } catch (err) {

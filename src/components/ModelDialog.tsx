@@ -66,9 +66,12 @@ export default function ModelDialog() {
           <Icon icon="iconamoon:settings-thin" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="block sm:max-w-md">
+      <DialogContent  className="block sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Model Settings</DialogTitle>
+          <DialogDescription>
+            You can select the model you want to use for the current chat and the next chats. 
+          </DialogDescription>
         </DialogHeader>
         <div className="w-full my-3">
           <Select onValueChange={(value) => setModel(value)} defaultValue={currentModel as string}>

@@ -17,9 +17,9 @@ import { useState } from "react"
 
 export default function PromptDialog() {
 
-  const { quickPrompts, removePrompt, addNewPrompt, setSystemPrompt } = useChatStore()
+  const { systemPrompt, quickPrompts, removePrompt, addNewPrompt, setSystemPrompt } = useChatStore()
 
-  const [ systemPromptInput, setSystemPromptInput ] = useState('')
+  const [ systemPromptInput, setSystemPromptInput ] = useState(systemPrompt)
   const [systemDialogOpen, setSystemDialogOpen] = useState(false)
   const [ quickPromptDialogOpen, setQuickPromptDialogOpen ] = useState(false)
   const [ newQuickPrompt, setNewQuickPrompt ] = useState('')
@@ -34,7 +34,6 @@ export default function PromptDialog() {
   async function doSetSystemPrompt(e: React.FormEvent) {
     e.preventDefault()
     setSystemPrompt(systemPromptInput)
-    setSystemPromptInput('')
     setSystemDialogOpen(false)
   }
 
@@ -43,11 +42,14 @@ export default function PromptDialog() {
     
     <Dialog open={systemDialogOpen} onOpenChange={setSystemDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Icon icon="iconamoon:settings-thin" /> System Prompt</Button>
+        <Button variant="outline"><Icon className={`${systemPrompt.length && 'text-green-400'}`} icon="iconamoon:settings-thin" /> System Prompt</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>System Prompt:</DialogTitle>
+          <DialogDescription>
+            Set the system prompt to guide the AI's behavior.
+          </DialogDescription>
         </DialogHeader>
         <div className="w-full">
           <form className="text-right" onSubmit={(e) =>  doSetSystemPrompt(e) }>
@@ -86,6 +88,9 @@ export default function PromptDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add A Quick Prompt:</DialogTitle>
+          <DialogDescription>
+            Add a new quick prompt for easy access. It will be saved for future use.
+          </DialogDescription>
         </DialogHeader>
         <div className="w-full">
           <form className="text-right" onSubmit={(e) => createNewPrompt(e)}>
