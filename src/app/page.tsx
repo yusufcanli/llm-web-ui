@@ -9,6 +9,7 @@ import { Icon } from "@iconify/react";
 import PromptDialog from "@/components/PromptDialog";
 import ModelDialog from "@/components/ModelDialog";
 import { MessageType } from "@/types";
+import ErrorDialog from "@/components/ErrorDialog";
 
 
 export default function Home() {
@@ -24,6 +25,7 @@ export default function Home() {
 
   const currentChat = useChatStore(state => state.currentChat)
   const aiResponding = useChatStore(state => state.aiResponding)
+  const serverError = useChatStore(state => state.serverError)
 
   const [resizeEditor, setResizeEditor] = useState(false)
   const [editMessageContent, setEditMessageContent] = useState({
@@ -122,10 +124,16 @@ function stopAiResponse() {
     return;
   }
 
+  if(serverError) {
+    return <ErrorDialog />
+  }
+
 return (
   <SidebarProvider open={openSidebar}>
     <AppSidebar />
     <main className="w-full">
+
+      
       { chats.length > 0 && (<SidebarTrigger />) }
       <div className="container">
         { chats.length < 1 && (<h1 className="mb-5 mt-[10%]">Start A New Conversation</h1>) }

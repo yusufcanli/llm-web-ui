@@ -24,6 +24,7 @@ interface ChatState {
     controller: AbortController | null;
   },
   systemPrompt: string;
+  serverError: string | null;
 
   setApiRoute: (route: string) => void;
   getModels: () => Promise<void>;
@@ -61,6 +62,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     controller: null
   },
   systemPrompt: '',
+  serverError: null,
 
   setApiRoute(route: string) {
     set(({ apiRoute: route }))
@@ -71,14 +73,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set(({ aiChats: chats }))
     const prompts = (await DB.getItem('aiPrompts') || []) as string[]
     set(({ quickPrompts: prompts }))
-    const response = await fetch(`${get().apiRoute}/v1/models?cache=${Date.now()}`)
-    const allModels = await response.json()
-    console.log('allModels', allModels)
-    set(({ models: allModels.data }))
-    const savedModel = localStorage.getItem('currentModel') || ''
-    const findModel = get().models.find(m => m.id === savedModel)
-    const model = findModel ? savedModel : get().models[0].id
-    set(({ currentModel: model }))
+    try {
+      const response = await fetch(`${get().apiRoute}/v1/models?cache=${Date.now()}`)
+      const allModels = await response.json()
+      set(({ models: allModels.data }))
+      const savedModel = localStorage.getItem('currentModel') || ''
+      const findModel = get().models.find(m => m.id === savedModel)
+      const model = findModel ? savedModel : get().models[0].id
+      set(({ currentModel: model }))
+    } catch (err) {
+      const error = err as Error
+      set(({ serverError: error.message }) )
+    }
   },
   async setModel(modelId: string) {
     const currentChatModel = get().currentChat.model
