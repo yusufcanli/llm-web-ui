@@ -104,7 +104,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     set({ aiChats })
   },
   async addNewChat(userPrompt: string ) {
-    console.log(userPrompt)
     const newChat: ChatType = { name: userPrompt.slice(0, 50), id: Date.now(), model: get().currentModel, story: '' }
     const systemMessage: MessageType = { role: "system", content: get().systemPrompt, date: (Date.now() - 10) }
     const userMessage: MessageType = { role: "user", content: userPrompt, date: Date.now() }
