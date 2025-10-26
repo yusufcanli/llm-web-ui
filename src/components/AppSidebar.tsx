@@ -71,9 +71,14 @@ export function AppSidebar() {
     const reader = new FileReader();
     reader.readAsText(file);
     reader.onload = () => {
+      if(typeof reader.result !== 'string') {
+        //setNotification.error('Invalid file content');
+        return;
+      }
       uploadChat(reader.result)
     };
     reader.onerror = (error) => {
+      console.error('Error reading file:', error);
       //setNotification.error(error.message);
     };
   }

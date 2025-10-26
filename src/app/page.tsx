@@ -10,6 +10,12 @@ import PromptDialog from "@/components/PromptDialog";
 import ModelDialog from "@/components/ModelDialog";
 import { MessageType } from "@/types";
 import ErrorDialog from "@/components/ErrorDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 export default function Home() {
@@ -18,7 +24,7 @@ export default function Home() {
   const [openSidebar, setOpenSidebar] = useState(false)
   const [initialzed, setInitialized] = useState(false)
   const [messageInput, setMessageInput] = useState('')
-  const messageInputTokens = useMemo(() => Math.ceil(messageInput.length / 4), [messageInput])
+  const messageInputTokens = useMemo(() => tokenCounter(messageInput), [messageInput])
   const chats = useChatStore(state => {
     return state.aiChats.reverse()
   })
@@ -49,7 +55,9 @@ function downloadChat() {
   URL.revokeObjectURL(url);
 }
 
-
+function tokenCounter(input: string) {
+  return Math.ceil(input.length / 4)
+}
 
 async function createChat(message: string) {
   const addNewChat = useChatStore.getState().addNewChat
@@ -140,12 +148,20 @@ return (
         <div className="text-lg bg-[#111111] py-10 px-5 rounded-lg">
           {
             !!currentChat.id && (
-              <div>
-                <span className="text-xxl">{ currentChat.name }</span>
-                <div className="ops flex gap-2 mb-3">
-                  <Button onClick={downloadChat} variant="outline">Download</Button>
-                  <Button onClick={() => deleteChat(currentChat.id!)} variant="destructive">Remove</Button>
+              <div className="w-full flex justify-between items-center mb-5">
+                <div>
+                  <h1>{ currentChat.name }</h1>
+                  <span className="text-sm text-gray-400">{tokenCounter(currentChat.messages!.join(''))} tokens</span>
                 </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <Icon icon="iconamoon:menu-kebab-vertical-fill" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={downloadChat}>Download</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => deleteChat(currentChat.id!)}>Remove Chat</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )
           }
