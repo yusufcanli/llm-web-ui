@@ -42,13 +42,16 @@ export default function PromptDialog() {
     
     <Dialog open={systemDialogOpen} onOpenChange={setSystemDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Icon className={`${systemPrompt.length && 'text-green-400'}`} icon="iconamoon:settings-thin" /> System Prompt</Button>
+        <Button className="w-full justify-start" variant="outline">
+          <Icon className={`${systemPrompt.length && 'text-green-400'}`} icon="iconamoon:settings-thin" />
+          System Prompt
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>System Prompt:</DialogTitle>
           <DialogDescription>
-            Set the system prompt to guide the AI's behavior.
+            Set the system prompt to guide the AI&apos;s behavior.
           </DialogDescription>
         </DialogHeader>
         <div className="w-full">

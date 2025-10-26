@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import useChatStore from "@/store/chatStore"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import PromptDialog from "./PromptDialog"
 import {
   Dialog,
   DialogClose,
@@ -14,7 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import * as React from "react"
 
 import {
   Select,
@@ -31,34 +31,11 @@ export default function ModelDialog() {
 
   const { currentModel, models, setModel } = useChatStore()
 
-
-
-
-
-  const { quickPrompts, removePrompt, addNewPrompt, setSystemPrompt } = useChatStore()
-
-  const [ systemPromptInput, setSystemPromptInput ] = useState('')
   const [systemDialogOpen, setSystemDialogOpen] = useState(false)
-  const [ quickPromptDialogOpen, setQuickPromptDialogOpen ] = useState(false)
-  const [ newQuickPrompt, setNewQuickPrompt ] = useState('')
 
-  async function createNewPrompt(e: React.FormEvent) {
-    e.preventDefault()
-    await addNewPrompt(newQuickPrompt)
-    setNewQuickPrompt('')
-    setQuickPromptDialogOpen(false)
-  }
-
-  async function doSetSystemPrompt(e: React.FormEvent) {
-    e.preventDefault()
-    setSystemPrompt(systemPromptInput)
-    setSystemPromptInput('')
-    setSystemDialogOpen(false)
-  }
 
   return (
     <>
-    
     <Dialog open={systemDialogOpen} onOpenChange={setSystemDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">
@@ -87,7 +64,15 @@ export default function ModelDialog() {
               </SelectGroup>
             </SelectContent>
           </Select>
-
+        </div>
+        <div className="w-full my-5 flex flex-col gap-2">
+        <DialogHeader>
+          <DialogTitle>System Prompt Settings</DialogTitle>
+            <DialogDescription>
+              Set the system prompt to guide the AI&apos;s behavior.
+            </DialogDescription>
+          </DialogHeader>
+          <PromptDialog />
         </div>
         <DialogFooter className="sm:justify-start">
           <DialogClose asChild>
@@ -96,19 +81,6 @@ export default function ModelDialog() {
             </Button>
           </DialogClose>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <Dialog open={quickPromptDialogOpen} onOpenChange={setQuickPromptDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add A Quick Prompt:</DialogTitle>
-        </DialogHeader>
-        <div className="w-full">
-          <form className="text-right" onSubmit={(e) => createNewPrompt(e)}>
-            <textarea onChange={(e) => setNewQuickPrompt(e.target.value)} required className="w-full min-h-[100px] bg-black px-2 py-1" name="" id="" placeholder="You are a helpful assistant."></textarea>
-            <Button className="mt-1" type="submit">Add</Button>
-          </form>
-        </div>
       </DialogContent>
     </Dialog>
     </>

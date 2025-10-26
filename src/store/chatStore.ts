@@ -71,6 +71,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   async getModels() {
     const chats = (await DB.getItem('aiChats') || []) as ChatType[]
     set(({ aiChats: chats }))
+    if(chats.length) {
+      const lastChat = chats[chats.length -1]
+      get().setCurrentChat(lastChat.id as number)
+    }
     const prompts = (await DB.getItem('aiPrompts') || []) as string[]
     set(({ quickPrompts: prompts }))
     try {

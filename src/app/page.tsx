@@ -142,13 +142,13 @@ return (
     <main className="w-full">
 
       
-      { chats.length > 0 && (<SidebarTrigger />) }
+      { chats.length > 0 && (<SidebarTrigger onClick={() => setOpenSidebar(!openSidebar)} />) }
       <div className="container">
         { chats.length < 1 && (<h1 className="mb-5 mt-[10%]">Start A New Conversation</h1>) }
-        <div className="text-lg bg-[#111111] py-10 px-5 rounded-lg">
+        <div className="text-lg p-5 border-b border-gray-600">
           {
             !!currentChat.id && (
-              <div className="w-full flex justify-between items-center mb-5">
+              <div className="w-full flex justify-between items-center">
                 <div>
                   <h1>{ currentChat.name }</h1>
                   <span className="text-sm text-gray-400">{tokenCounter(currentChat.messages!.join(''))} tokens</span>
@@ -165,7 +165,6 @@ return (
               </div>
             )
           }
-          <PromptDialog />
         </div>
         <div className="chat w-full my-3 p-3">
           {
@@ -259,7 +258,7 @@ return (
           </div>
           <div className="w-full flex items-center justify-between">
             <ModelDialog />
-            <div className="mr-3 text-sm">
+            <div className="mr-3 text-sm text-gray-400">
               {messageInputTokens} tokens
             </div>
           </div>
