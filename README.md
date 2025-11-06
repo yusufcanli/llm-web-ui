@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LLM Web UI
 
-## Getting Started
+A lightweight web UI for interacting with OpenAI-compatible LLM endpoints. Built with Next.js and React, it supports streaming chat completions, model selection, saving/loading chats, quick prompts, and local persistence.
 
-First, run the development server:
+---
+
+## Key features
+
+- Connects to OpenAI-compatible endpoints (expects OpenAI-compatible REST paths such as `/v1/models` and `/v1/chat/completions`).
+- Streaming chat responses (uses the streaming output from `/v1/chat/completions`).
+- Model selection (UI lists models from the server `/v1/models`).
+- Save, load, download and upload chats as JSON.
+- Quick prompts and a system prompt to guide assistant behavior.
+- Local persistence using localforage (stored keys: `aiChats`, `aiPrompts`, and per-chat keys like `<chatId>_chats`).
+- Simple token estimate and message editing utilities in the UI.
+
+The code that powers these features lives mostly in `src/store/chatStore.ts`, UI components live in `src/components/` and the main page is `src/app/page.tsx`.
+
+## Quick start
+
+Prerequisites:
+
+- Node.js 18+ (recommended)
+- npm (or yarn/pnpm)
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Build for production:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Configuration
 
-## Learn More
+This project expects an environment variable `NEXT_PUBLIC_API_URL` that points to an OpenAI-compatible base URL (for example, an OpenAI proxy, self-hosted LLM server, or the OpenAI API if you expose it through a secure server).
 
-To learn more about Next.js, take a look at the following resources:
+Example `.env` / `.env.local`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+NEXT_PUBLIC_API_URL=https://api.openai.com
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Notes:
 
-## Deploy on Vercel
+- The store defaults to `process.env.NEXT_PUBLIC_API_URL` but also respects an in-app `setApiRoute` which saves the value to `localStorage` (see `src/store/chatStore.ts`).
+- The app fetches models from `GET ${apiRoute}/v1/models` and sends chat requests to `POST ${apiRoute}/v1/chat/completions` (streaming enabled).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Usage highlights (UI)
+
+- Sidebar: lists saved chats, create new chat, upload a chat JSON, delete or rename chats.
+- Chat area: read streaming assistant responses, stop a stream, download current chat as JSON.
+- Model & prompts: open the Model dialog to select a model from the server; edit system prompt or add quick prompts with the Prompt dialog.
+
+
+## Troubleshooting
+
+- If the app shows a server error on startup, check the browser console and ensure `NEXT_PUBLIC_API_URL` is correct and your endpoint supports the expected OpenAI-compatible paths.
+- The app expects streaming responses from `/v1/chat/completions`. If your server doesn't support streaming, responses may not render progressively.
+
