@@ -40,7 +40,7 @@ interface ChatState {
   uploadChat: (chat: string) => Promise<void>;
   addUserMessage: (message: MessageType) => Promise<void>;
   addAiMessage: (message: MessageType) => Promise<void>;
-  editMessage: (edited: MessageType) => Promise<void>;
+  editMessage: (edited: {date: number; content: string}) => Promise<void>;
   removeMessage: (messageDate: number) => Promise<void>;
   setSystemPrompt: (systemPrompt: string) => Promise<void>;
   addNewPrompt: (prompt: string) => Promise<void>;
@@ -194,7 +194,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
     })
     await DB.setItem((get().currentChat.id + '_chats'), get().currentChat.messages)
   },
-  async editMessage(edited: MessageType) {
+  async editMessage(edited: { date: number; content: string }) {
     const currentChatMessages = get().currentChat.messages;
     if(!currentChatMessages) return;
     const messages = [...currentChatMessages]

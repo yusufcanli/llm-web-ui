@@ -2,11 +2,10 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/AppSidebar"
-import { use, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useChatStore from "@/store/chatStore";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
-import PromptDialog from "@/components/PromptDialog";
 import ModelDialog from "@/components/ModelDialog";
 import { MessageType } from "@/types";
 import ErrorDialog from "@/components/ErrorDialog";
@@ -35,10 +34,17 @@ export default function Home() {
 
   const [resizeEditor, setResizeEditor] = useState(false)
   const [editMessageContent, setEditMessageContent] = useState({
-    index: 0,
     content: '',
     date: 0
   })
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if(!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, [editMessageContent.content]);
 
   const messageClasses = {
     assistant: 'received bg-[#ffffff17] rounded-md',
@@ -88,12 +94,14 @@ async function sendMessage() {
   }
 }
 
-function doEditMessage() {
-
+async function doEditMessage() {
+  const editMessage = useChatStore.getState().editMessage
+  await editMessage(editMessageContent)
+  setEditMessageContent({ date: 0, content: ''})
 }
 
-function editMessage(message) {
-
+function editMessage(message: MessageType) {
+  setEditMessageContent({ date: message.date, content: message.content })
 }
 
 function copyMessage(content: string) {
@@ -115,9 +123,6 @@ function timeFilter(mDate: number) {
   });
 }
 
-function stopAiResponse() {
-
-}
 
   useEffect(() => {
     chatStore.getModels()
@@ -187,17 +192,18 @@ return (
                   }
                   <div className="w-full mt-3 sm:mt-0 sm:ml-3">
                     {
-                      editMessageContent.date === message.date && (
+                      editMessageContent.date === message.date ? (
                         <div className="contenteditable w-full mb-3">
-                          <textarea onChange={(e) => setEditMessageContent(prev => ({...prev, content: e.target.value}))} className="h-[50vh]"></textarea>
+                          <textarea ref={textareaRef} value={editMessageContent.content} onChange={(e) => setEditMessageContent(prev => ({...prev, content: e.target.value}))} className="overflow-hidden resize-none w-full p-2 bg-[#111111]"></textarea>
                           <div className="w-full flex justify-end gap-2">
                             <button onClick={() => setEditMessageContent(prev => ({...prev, date: 0}))} className="button red">Disgard</button>
                             <button onClick={doEditMessage} className="button green">Save</button>
                           </div>
                         </div>
+                      ) : (
+                        <div className="whitespace-break-spaces">{ message.content }</div>
                       )
                     }
-                    <div className="whitespace-break-spaces">{ message.content }</div>
                   </div>
                 </div>
                 <div className="mt-5 flex justify-between items-center">
