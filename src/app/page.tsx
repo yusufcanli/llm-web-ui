@@ -104,8 +104,8 @@ function editMessage(message: MessageType) {
   setEditMessageContent({ date: message.date, content: message.content })
 }
 
-function copyMessage(content: string) {
-
+async function copyMessage(content: string) {
+    await navigator.clipboard.writeText(content)
 }
 
 function removeMessage(messageDate: number) {
@@ -137,18 +137,13 @@ function timeFilter(mDate: number) {
     return;
   }
 
-  if(serverError) {
-    return <ErrorDialog />
-  }
-
 return (
   <SidebarProvider open={openSidebar}>
     <AppSidebar />
     <main className="w-full">
-
-      
       { chats.length > 0 && (<SidebarTrigger onClick={() => setOpenSidebar(!openSidebar)} />) }
       <div className="container">
+        { serverError && (<ErrorDialog />) }
         { chats.length < 1 && (<h1 className="mb-5 mt-[10%]">Start A New Conversation</h1>) }
         <div className="text-lg p-5 border-b border-gray-600">
           {
@@ -196,8 +191,8 @@ return (
                         <div className="contenteditable w-full mb-3">
                           <textarea ref={textareaRef} value={editMessageContent.content} onChange={(e) => setEditMessageContent(prev => ({...prev, content: e.target.value}))} className="overflow-hidden resize-none w-full p-2 bg-[#111111]"></textarea>
                           <div className="w-full flex justify-end gap-2">
-                            <button onClick={() => setEditMessageContent(prev => ({...prev, date: 0}))} className="button red">Disgard</button>
-                            <button onClick={doEditMessage} className="button green">Save</button>
+                            <Button variant="destructive" onClick={() => setEditMessageContent(prev => ({...prev, date: 0}))}>Disgard</Button>
+                            <Button variant="green" onClick={doEditMessage} className="button green">Save</Button>
                           </div>
                         </div>
                       ) : (
@@ -208,13 +203,13 @@ return (
                 </div>
                 <div className="mt-5 flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <button className="focus:text-[--green]" onClick={() => editMessage(message)}>
+                    <button className="cursor-pointer focus:text-green-400" onClick={() => editMessage(message)}>
                       <Icon icon="mage:edit" />
                     </button>
-                    <button className="focus:text-[--green]" onClick={() => copyMessage(message.content)}>
+                    <button className="cursor-pointer focus:text-green-400" onClick={() => copyMessage(message.content)}>
                       <Icon icon="mynaui:copy" />
                     </button>
-                    <button className="focus:text-red-500" onClick={() => removeMessage(message.date)}>
+                    <button className="cursor-pointer focus:text-red-500" onClick={() => removeMessage(message.date)}>
                       <Icon icon="material-symbols:delete-outline" />
                     </button>
                   </div>
