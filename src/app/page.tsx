@@ -21,7 +21,6 @@ export default function Home() {
   const chatStore = useChatStore()
 
   const [openSidebar, setOpenSidebar] = useState(false)
-  const [initialzed, setInitialized] = useState(false)
   const [messageInput, setMessageInput] = useState('')
   const messageInputTokens = useMemo(() => tokenCounter(messageInput), [messageInput])
   const chats = useChatStore(state => {
@@ -126,16 +125,11 @@ function timeFilter(mDate: number) {
 
   useEffect(() => {
     chatStore.getModels()
-      .then(() => setInitialized(true))
   }, [])
 
   useEffect(() => {
     setOpenSidebar(chats.length > 0)
   }, [chats])
-
-  if(!initialzed) {
-    return;
-  }
 
 return (
   <SidebarProvider open={openSidebar}>
