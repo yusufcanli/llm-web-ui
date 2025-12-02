@@ -104,6 +104,16 @@ export default function ModelDialog() {
                   placeholder="1.0"
                 />
               </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium">Max Tokens</label>
+                <Input
+                  type="number"
+                  step="1"
+                  value={llmConfig.max_tokens}
+                  onChange={(e) => updateLlmConfig({ max_tokens: e.target.value })}
+                  placeholder="2048"
+                />
+              </div>
               <div className="flex items-center gap-2 col-span-2">
                 <input
                   type="checkbox"
